@@ -15,21 +15,16 @@ contract SimpleProxyContract {
     }
 
     fallback() external payable {
+        
         (bool success, bytes memory data) = implementation.delegatecall(msg.data);
 
         assembly
         {
-            // delegatecall leaves the return data in a returndata buffer
-            // we have to go get it
-
             // how much data?
-            let size := returndatasize()
+            let size := mload(data)
 
-            // where's the next available memory address?
-            let location := mload(0x40)
-
-            // copy the returndata buffer to memory
-            returndatacopy(location, 0, size)
+            // where's the data?
+            let location := add(data, 0x20)
 
             // delegatecall bool is falsy on 0, truthy on non-zero
             if iszero(success) { revert(location, size) }
